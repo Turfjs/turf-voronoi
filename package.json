@@ -4,7 +4,8 @@
   "description": "turf voronoi module",
   "main": "index.js",
   "scripts": {
-    "test": "tape tests/tape.js"
+    "test": "tape tests/test.js",
+    "doc": "dox -r < index.js | doxme --readme > README.md"
   },
   "repository": {
     "type": "git",

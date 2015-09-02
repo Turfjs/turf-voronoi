@@ -1,0 +1,32 @@
+{
+  "name": "turf-voronoi",
+  "version": "1.0.0",
+  "description": "turf voronoi module",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape tests/tape.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Turfjs/turf-voronoi.git"
+  },
+  "keywords": [
+    "turf",
+    "voronoi",
+    "thiessen",
+    "polygon"
+  ],
+  "author": "jrzimmerman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Turfjs/turf-voronoi/issues"
+  },
+  "homepage": "https://github.com/Turfjs/turf-voronoi#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "benchmark": "^1.0.0",
+    "dox": "^0.8.0",
+    "doxme": "^1.8.2",
+    "tape": "^4.2.0"
+  }
+}

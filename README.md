@@ -1,5 +1,7 @@
 # turf-voronoi
 
+[![build status](https://secure.travis-ci.org/Turfjs/turf-voronoi.png)](http://travis-ci.org/Turfjs/turf-voronoi)
+
 turf voronoi module
 
 

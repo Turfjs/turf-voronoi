@@ -23,7 +23,10 @@
     "url": "https://github.com/Turfjs/turf-voronoi/issues"
   },
   "homepage": "https://github.com/Turfjs/turf-voronoi#readme",
-  "dependencies": {},
+  "dependencies": {
+    "turf-featurecollection": "^1.0.1",
+    "turf-polygon": "^1.0.3"
+  },
   "devDependencies": {
     "benchmark": "^1.0.0",
     "dox": "^0.8.0",

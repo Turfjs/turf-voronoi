@@ -71,75 +71,75 @@ module.exports = function(points) {
 
     detachBeach(beach);
 
-    var lArc = previous;
-    while (lArc.circle && Math.abs(x - lArc.circle.x) < epsilon &&
-      Math.abs(y - lArc.circle.cy) < epsilon) {
-      previous = lArc.P;
-      disappearing.unshift(lArc);
-      detachBeach(lArc);
-      lArc = previous;
+    var leftArc = previous;
+    while (leftArc.circle && Math.abs(x - leftArc.circle.x) < epsilon &&
+      Math.abs(y - leftArc.circle.cy) < epsilon) {
+      previous = leftArc.P;
+      disappearing.unshift(leftArc);
+      detachBeach(leftArc);
+      leftArc = previous;
     }
 
-    disappearing.unshift(lArc);
-    detachCircle(lArc);
+    disappearing.unshift(leftArc);
+    detachCircle(leftArc);
 
-    var rArc = next;
-    while (rArc.circle && Math.abs(x - rArc.circle.x) < epsilon &&
-      Math.abs(y - rArc.circle.cy) < epsilon) {
-      next = rArc.N;
-      disappearing.push(rArc);
-      detachBeach(rArc);
-      rArc = next;
+    var rightArc = next;
+    while (rightArc.circle && Math.abs(x - rightArc.circle.x) < epsilon &&
+      Math.abs(y - rightArc.circle.cy) < epsilon) {
+      next = rightArc.N;
+      disappearing.push(rightArc);
+      detachBeach(rightArc);
+      rightArc = next;
     }
 
-    disappearing.push(rArc);
-    detachCircle(rArc);
+    disappearing.push(rightArc);
+    detachCircle(rightArc);
 
     var nArcs = disappearing.length,
       iArc;
     for (iArc = 1; iArc < nArcs; ++iArc) {
-      rArc = disappearing[iArc];
-      lArc = disappearing[iArc - 1];
-      setEdgeEnd(rArc.edge, lArc.site, rArc.site, vertex);
+      rightArc = disappearing[iArc];
+      leftArc = disappearing[iArc - 1];
+      setEdgeEnd(rightArc.edge, leftArc.site, rightArc.site, vertex);
     }
 
-    lArc = disappearing[0];
-    rArc = disappearing[nArcs - 1];
-    rArc.edge = createEdge(lArc.site, rArc.site, null, vertex);
+    leftArc = disappearing[0];
+    rightArc = disappearing[nArcs - 1];
+    rightArc.edge = createEdge(leftArc.site, rightArc.site, null, vertex);
 
-    attachCircle(lArc);
-    attachCircle(rArc);
+    attachCircle(leftArc);
+    attachCircle(rightArc);
   }
 
   function addBeach(site) {
     var x = site.x,
       directrix = site.y,
-      lArc,
-      rArc,
+      leftArc,
+      rightArc,
       dxl,
       dxr,
       node = beaches._;
 
     while (node) {
       dxl = leftBreakPoint(node, directrix) - x;
-      if (dxl > epsilon) node = node.L;
+      if (dxl > epsilon) node = node.Left;
       else {
         dxr = x - rightBreakPoint(node, directrix);
         if (dxr > epsilon) {
-          if (!node.R) {
-            lArc = node;
+          if (!node.Right) {
+            leftArc = node;
             break;
           }
-          node = node.R;
+          node = node.Right;
         } else {
           if (dxl > -epsilon) {
-            lArc = node.P;
-            rArc = node;
+            leftArc = node.Previous;
+            rightArc = node;
           } else if (dxr > -epsilon) {
-            lArc = node;
-            rArc = node.N;
+            leftArc = node;
+            rightArc = node.Next;
           } else {
-            lArc = rArc = node;
+            leftArc = rightArc = node;
           }
           break;
         }
@@ -148,37 +148,39 @@ module.exports = function(points) {
 
     createCell(site);
     var newArc = createBeach(site);
-    beaches.insert(lArc, newArc);
+    beaches.insert(leftArc, newArc);
 
-    if (!lArc && !rArc) return;
-
-    if (lArc === rArc) {
-      detachCircle(lArc);
-      rArc = createBeach(lArc.site);
-      beaches.insert(newArc, rArc);
-      newArc.edge = rArc.edge = createEdge(lArc.site, newArc.site);
-      attachCircle(lArc);
-      attachCircle(rArc);
+    if (!leftArc && !rightArc) {
       return;
     }
 
-    if (!rArc) { // && lArc
-      newArc.edge = createEdge(lArc.site, newArc.site);
+    if (leftArc === rightArc) {
+      detachCircle(leftArc);
+      rightArc = createBeach(leftArc.site);
+      beaches.insert(newArc, rightArc);
+      newArc.edge = rightArc.edge = createEdge(leftArc.site, newArc.site);
+      attachCircle(leftArc);
+      attachCircle(rightArc);
       return;
     }
 
-    // else lArc !== rArc
-    detachCircle(lArc);
-    detachCircle(rArc);
+    if (!rightArc) { // && leftArc
+      newArc.edge = createEdge(leftArc.site, newArc.site);
+      return;
+    }
 
-    var lSite = lArc.site,
-      ax = lSite.x,
-      ay = lSite.y,
+    // else leftArc !== rightArc
+    detachCircle(leftArc);
+    detachCircle(rightArc);
+
+    var leftSite = leftArc.site,
+      ax = leftSite.x,
+      ay = leftSite.y,
       bx = site.x - ax,
       by = site.y - ay,
-      rSite = rArc.site,
-      cx = rSite.x - ax,
-      cy = rSite.y - ay,
+      rightSite = rightArc.site,
+      cx = rightSite.x - ax,
+      cy = rightSite.y - ay,
       d = 2 * (bx * cy - by * cx),
       hb = bx * bx + by * by,
       hc = cx * cx + cy * cy,
@@ -187,11 +189,11 @@ module.exports = function(points) {
         y: (bx * hc - cx * hb) / d + ay
       };
 
-    setEdgeEnd(rArc.edge, lSite, rSite, vertex);
-    newArc.edge = createEdge(lSite, site, null, vertex);
-    rArc.edge = createEdge(site, rSite, null, vertex);
-    attachCircle(lArc);
-    attachCircle(rArc);
+    setEdgeEnd(rightArc.edge, leftSite, rightSite, vertex);
+    newArc.edge = createEdge(leftSite, site, null, vertex);
+    rightArc.edge = createEdge(site, rightSite, null, vertex);
+    attachCircle(leftArc);
+    attachCircle(rightArc);
   }
 
   function leftBreakPoint(arc, directrix) {
@@ -200,30 +202,41 @@ module.exports = function(points) {
       rfocy = site.y,
       pby2 = rfocy - directrix;
 
-    if (!pby2) return rfocx;
+    if (!pby2) {
+      return rfocx;
+    }
 
-    var lArc = arc.P;
-    if (!lArc) return -Infinity;
+    var leftArc = arc.P;
+    if (!leftArc) {
+      return -Infinity;
+    }
 
-    site = lArc.site;
+    site = leftArc.site;
     var lfocx = site.x,
       lfocy = site.y,
       plby2 = lfocy - directrix;
 
-    if (!plby2) return lfocx;
+    if (!plby2) {
+      return lfocx;
+    }
 
     var hl = lfocx - rfocx,
       aby2 = 1 / pby2 - 1 / plby2,
       b = hl / plby2;
 
-    if (aby2) return (-b + Math.sqrt(b * b - 2 * aby2 * (hl * hl / (-2 * plby2) - lfocy + plby2 / 2 + rfocy - pby2 / 2))) / aby2 + rfocx;
+    if (aby2) {
+      return (-b + Math.sqrt(b * b - 2 * aby2 * (hl * hl / (-2 * plby2) - lfocy + plby2 / 2 + rfocy - pby2 / 2))) / aby2 + rfocx;
+    }
 
     return (rfocx + lfocx) / 2;
   }
 
   function rightBreakPoint(arc, directrix) {
-    var rArc = arc.N;
-    if (rArc) return leftBreakPoint(rArc, directrix);
+    var rightArc = arc.N;
+    if (rightArc) {
+      return leftBreakPoint(rightArc, directrix);
+    }
+
     var site = arc.site;
     return site.y === directrix ? site.x : Infinity;
   }
@@ -324,32 +337,38 @@ module.exports = function(points) {
   }
 
   function attachCircle(arc) {
-    var lArc = arc.P,
-      rArc = arc.N;
+    var leftArc = arc.P,
+      rightArc = arc.N;
 
-    if (!lArc || !rArc) return;
+    if (!leftArc || !rightArc) {
+      return;
+    }
 
-    var lSite = lArc.site,
+    var leftSite = leftArc.site,
       cSite = arc.site,
-      rSite = rArc.site;
+      rightSite = rightArc.site;
 
-    if (lSite === rSite) return;
+    if (leftSite === rightSite) {
+      return;
+    }
 
     var bx = cSite.x,
       by = cSite.y,
-      ax = lSite.x - bx,
-      ay = lSite.y - by,
-      cx = rSite.x - bx,
-      cy = rSite.y - by;
+      ax = leftSite.x - bx,
+      ay = leftSite.y - by,
+      cx = rightSite.x - bx,
+      cy = rightSite.y - by;
 
     var d = 2 * (ax * cy - ay * cx);
-    if (d >= -epsilon2) return;
+    if (d >= -epsilon2) {
+      return;
+    }
 
-      ha = ax * ax + ay * ay;
-      hc = cx * cx + cy * cy;
-      x = (cy * ha - ay * hc) / d;
-      y = (ax * hc - cx * ha) / d;
-      cy = y + by;
+    ha = ax * ax + ay * ay;
+    hc = cx * cx + cy * cy;
+    x = (cy * ha - ay * hc) / d;
+    y = (ax * hc - cx * ha) / d;
+    cy = y + by;
 
     var circle = circlePool.pop() || new Circle();
     circle.arc = arc;
@@ -365,13 +384,13 @@ module.exports = function(points) {
 
     while (node) {
       if (circle.y < node.y || (circle.y === node.y && circle.x <= node.x)) {
-        if (node.L) node = node.L;
+        if (node.Left) node = node.Left;
         else {
-          before = node.P;
+          before = node.Previous;
           break;
         }
       } else {
-        if (node.R) node = node.R;
+        if (node.Right) node = node.Right;
         else {
           before = node;
           break;
@@ -400,43 +419,42 @@ module.exports = function(points) {
   //
   // **********************
 
-  function Edge(lSite, rSite) {
-    this.l = lSite;
-    this.r = rSite;
+  function Edge(leftSite, rightSite) {
+    this.l = leftSite;
+    this.r = rightSite;
     this.a = this.b = null; // for border edges
   }
 
-  function createEdge(lSite, rSite, va, vb) {
-    var edge = new Edge(lSite, rSite);
+  function createEdge(leftSite, rightSite, vertexA, vertexB) {
+    var edge = new Edge(leftSite, rightSite);
     edges.push(edge);
-    if (va) setEdgeEnd(edge, lSite, rSite, va);
-    if (vb) setEdgeEnd(edge, rSite, lSite, vb);
-    cells[lSite.i].edges.push(createHalfEdge(edge, lSite, rSite));
-    cells[rSite.i].edges.push(createHalfEdge(edge, rSite, lSite));
+    if (vertexA) setEdgeEnd(edge, leftSite, rightSite, vertexA);
+    if (vertexB) setEdgeEnd(edge, rightSite, leftSite, vertexB);
+    cells[leftSite.i].edges.push(createHalfEdge(edge, leftSite, rightSite));
+    cells[rightSite.i].edges.push(createHalfEdge(edge, rightSite, leftSite));
     return edge;
   }
 
-  function createBorderEdge(lSite, va, vb) {
-    var edge = new Edge(lSite, null);
-    edge.a = va;
-    edge.b = vb;
+  function createBorderEdge(leftSite, vertexA, vertexB) {
+    var edge = new Edge(leftSite, null);
+    edge.a = vertexA;
+    edge.b = vertexB;
     edges.push(edge);
     return edge;
   }
 
-  function setEdgeEnd(edge, lSite, rSite, vertex) {
+  function setEdgeEnd(edge, leftSite, rightSite, vertex) {
     if (!edge.a && !edge.b) {
       edge.a = vertex;
-      edge.l = lSite;
-      edge.r = rSite;
-    } else if (edge.l === rSite) {
+      edge.l = leftSite;
+      edge.r = rightSite;
+    } else if (edge.l === rightSite) {
       edge.b = vertex;
     } else {
       edge.a = vertex;
     }
   }
 
-  // Liang–Barsky line clipping.
   function clipLine(line, x0, y0, x1, y1) {
     var a = line.a,
       b = line.b,
@@ -506,16 +524,16 @@ module.exports = function(points) {
   }
 
   function connectEdge(edge, x0, y0, x1, y1) {
-    var vb = edge.b;
-    if (vb) return true;
+    var vertexB = edge.b;
+    if (vertexB) return true;
 
-    var va = edge.a,
-      lSite = edge.l,
-      rSite = edge.r,
-      lx = lSite.x,
-      ly = lSite.y,
-      rx = rSite.x,
-      ry = rSite.y,
+    var vertexA = edge.a,
+      leftSite = edge.l,
+      rightSite = edge.r,
+      lx = leftSite.x,
+      ly = leftSite.y,
+      rx = rightSite.x,
+      ry = rightSite.y,
       fx = (lx + rx) / 2,
       fy = (ly + ry) / 2,
       fm,
@@ -524,22 +542,22 @@ module.exports = function(points) {
     if (ry === ly) {
       if (fx < x0 || fx >= x1) return;
       if (lx > rx) {
-        if (!va) va = {
+        if (!vertexA) vertexA = {
           x: fx,
           y: y0
         };
-        else if (va.y >= y1) return;
-        vb = {
+        else if (vertexA.y >= y1) return;
+        vertexB = {
           x: fx,
           y: y1
         };
       } else {
-        if (!va) va = {
+        if (!vertexA) vertexA = {
           x: fx,
           y: y1
         };
-        else if (va.y < y0) return;
-        vb = {
+        else if (vertexA.y < y0) return;
+        vertexB = {
           x: fx,
           y: y0
         };
@@ -549,44 +567,44 @@ module.exports = function(points) {
       fb = fy - fm * fx;
       if (fm < -1 || fm > 1) {
         if (lx > rx) {
-          if (!va) va = {
+          if (!vertexA) vertexA = {
             x: (y0 - fb) / fm,
             y: y0
           };
-          else if (va.y >= y1) return;
-          vb = {
+          else if (vertexA.y >= y1) return;
+          vertexB = {
             x: (y1 - fb) / fm,
             y: y1
           };
         } else {
-          if (!va) va = {
+          if (!vertexA) vertexA = {
             x: (y1 - fb) / fm,
             y: y1
           };
-          else if (va.y < y0) return;
-          vb = {
+          else if (vertexA.y < y0) return;
+          vertexB = {
             x: (y0 - fb) / fm,
             y: y0
           };
         }
       } else {
         if (ly < ry) {
-          if (!va) va = {
+          if (!vertexA) vertexA = {
             x: x0,
             y: fm * x0 + fb
           };
-          else if (va.x >= x1) return;
-          vb = {
+          else if (vertexA.x >= x1) return;
+          vertexB = {
             x: x1,
             y: fm * x1 + fb
           };
         } else {
-          if (!va) va = {
+          if (!vertexA) vertexA = {
             x: x1,
             y: fm * x1 + fb
           };
-          else if (va.x < x0) return;
-          vb = {
+          else if (vertexA.x < x0) return;
+          vertexB = {
             x: x0,
             y: fm * x0 + fb
           };
@@ -594,8 +612,8 @@ module.exports = function(points) {
       }
     }
 
-    edge.a = va;
-    edge.b = vb;
+    edge.a = vertexA;
+    edge.b = vertexB;
     return true;
   }
 
@@ -632,10 +650,10 @@ module.exports = function(points) {
     }
   };
 
-  function createHalfEdge(edge, lSite, rSite) {
-    var va = edge.a,
-      vb = edge.b;
-    return new HalfEdge(edge, lSite, rSite ? Math.atan2(rSite.y - lSite.y, rSite.x - lSite.x) : edge.l === lSite ? Math.atan2(vb.x - va.x, va.y - vb.y) : Math.atan2(va.x - vb.x, vb.y - va.y));
+  function createHalfEdge(edge, leftSite, rightSite) {
+    var vertexA = edge.a,
+      vertexB = edge.b;
+    return new HalfEdge(edge, leftSite, rightSite ? Math.atan2(rightSite.y - leftSite.y, rightSite.x - leftSite.x) : edge.l === leftSite ? Math.atan2(vertexB.x - vertexA.x, vertexA.y - vertexB.y) : Math.atan2(vertexA.x - vertexB.x, vertexB.y - vertexA.y));
   }
 
   function descendingAngle(a, b) {
@@ -653,12 +671,12 @@ module.exports = function(points) {
   }
 
   function RedBlackNode(node) {
-    node.U = // parent node
-      node.C = // color - true for red, false for black
-      node.L = // left node
-      node.R = // right node
-      node.P = // previous node
-      node.N = null; // next node
+      node.Parent = // parent node
+      node.Color = // color - true for red, false for black
+      node.Left = // left node
+      node.Right = // right node
+      node.Previous = // previous node
+      node.Next = null; // next node
   }
 
   RedBlackTree.prototype = {
@@ -667,83 +685,83 @@ module.exports = function(points) {
       var parent, grandpa, uncle;
 
       if (after) {
-        node.P = after;
-        node.N = after.N;
-        if (after.N) after.N.P = node;
-        after.N = node;
-        if (after.R) {
-          after = after.R;
-          while (after.L) after = after.L;
-          after.L = node;
+        node.Previous = after;
+        node.Next = after.Next;
+        if (after.Next) after.Next.Previous = node;
+        after.Next = node;
+        if (after.Right) {
+          after = after.Right;
+          while (after.Left) after = after.Left;
+          after.Left = node;
         } else {
-          after.R = node;
+          after.Right = node;
         }
         parent = after;
       } else if (this._) {
         after = RedBlackFirst(this._);
-        node.P = null;
-        node.N = after;
-        after.P = after.L = node;
+        node.Previous = null;
+        node.Next = after;
+        after.Previous = after.Left = node;
         parent = after;
       } else {
-        node.P = node.N = null;
+        node.Previous = node.Next = null;
         this._ = node;
         parent = null;
       }
-      node.L = node.R = null;
-      node.U = parent;
-      node.C = true;
+      node.Left = node.Right = null;
+      node.Parent = parent;
+      node.Color = true;
 
       after = node;
-      while (parent && parent.C) {
-        grandpa = parent.U;
-        if (parent === grandpa.L) {
-          uncle = grandpa.R;
-          if (uncle && uncle.C) {
-            parent.C = uncle.C = false;
-            grandpa.C = true;
+      while (parent && parent.Color) {
+        grandpa = parent.Parent;
+        if (parent === grandpa.Left) {
+          uncle = grandpa.Right;
+          if (uncle && uncle.Color) {
+            parent.Color = uncle.Color = false;
+            grandpa.Color = true;
             after = grandpa;
           } else {
-            if (after === parent.R) {
+            if (after === parent.Right) {
               RedBlackRotateLeft(this, parent);
               after = parent;
-              parent = after.U;
+              parent = after.Parent;
             }
-            parent.C = false;
-            grandpa.C = true;
+            parent.Color = false;
+            grandpa.Color = true;
             RedBlackRotateRight(this, grandpa);
           }
         } else {
-          uncle = grandpa.L;
-          if (uncle && uncle.C) {
-            parent.C = uncle.C = false;
-            grandpa.C = true;
+          uncle = grandpa.Left;
+          if (uncle && uncle.Color) {
+            parent.Color = uncle.Color = false;
+            grandpa.Color = true;
             after = grandpa;
           } else {
-            if (after === parent.L) {
+            if (after === parent.Left) {
               RedBlackRotateRight(this, parent);
               after = parent;
-              parent = after.U;
+              parent = after.Parent;
             }
-            parent.C = false;
-            grandpa.C = true;
+            parent.Color = false;
+            grandpa.Color = true;
             RedBlackRotateLeft(this, grandpa);
           }
         }
-        parent = after.U;
+        parent = after.Parent;
       }
-      this._.C = false;
+      this._.Color = false;
     },
 
     remove: function(node) {
-      if (node.N) node.N.P = node.P;
-      if (node.P) node.P.N = node.N;
-      node.N = node.P = null;
+      if (node.Next) node.Next.P = node.Previous;
+      if (node.Previous) node.Previous.N = node.Next;
+      node.Next = node.Previous = null;
 
-      var parent = node.U,
+      var parent = node.Parent,
         sibling,
-        left = node.L,
-        right = node.R,
+        left = node.Left,
+        right = node.Right,
         next,
         red;
 
@@ -752,136 +770,136 @@ module.exports = function(points) {
       else next = RedBlackFirst(right);
 
       if (parent) {
-        if (parent.L === node) parent.L = next;
-        else parent.R = next;
+        if (parent.Left === node) parent.Left = next;
+        else parent.Right = next;
       } else {
         this._ = next;
       }
 
       if (left && right) {
-        red = next.C;
-        next.C = node.C;
-        next.L = left;
-        left.U = next;
+        red = next.Color;
+        next.Color = node.Color;
+        next.Left = left;
+        left.Parent = next;
         if (next !== right) {
-          parent = next.U;
-          next.U = node.U;
-          node = next.R;
-          parent.L = node;
-          next.R = right;
-          right.U = next;
+          parent = next.Parent;
+          next.Parent = node.Parent;
+          node = next.Right;
+          parent.Left = node;
+          next.Right = right;
+          right.Parent = next;
         } else {
-          next.U = parent;
+          next.Parent = parent;
           parent = next;
-          node = next.R;
+          node = next.Right;
         }
       } else {
-        red = node.C;
+        red = node.Color;
         node = next;
       }
 
-      if (node) node.U = parent;
+      if (node) node.Parent = parent;
       if (red) return;
-      if (node && node.C) {
-        node.C = false;
+      if (node && node.Color) {
+        node.Color = false;
         return;
       }
 
       do {
         if (node === this._) break;
-        if (node === parent.L) {
-          sibling = parent.R;
-          if (sibling.C) {
-            sibling.C = false;
-            parent.C = true;
+        if (node === parent.Left) {
+          sibling = parent.Right;
+          if (sibling.Color) {
+            sibling.Color = false;
+            parent.Color = true;
             RedBlackRotateLeft(this, parent);
-            sibling = parent.R;
+            sibling = parent.Right;
           }
-          if ((sibling.L && sibling.L.C) || (sibling.R && sibling.R.C)) {
-            if (!sibling.R || !sibling.R.C) {
-              sibling.L.C = false;
-              sibling.C = true;
+          if ((sibling.Left && sibling.Left.Color) || (sibling.Right && sibling.Right.Color)) {
+            if (!sibling.Right || !sibling.Right.Color) {
+              sibling.Left.Color = false;
+              sibling.Color = true;
               RedBlackRotateRight(this, sibling);
-              sibling = parent.R;
+              sibling = parent.Right;
             }
-            sibling.C = parent.C;
-            parent.C = sibling.R.C = false;
+            sibling.Color = parent.Color;
+            parent.Color = sibling.Right.Color = false;
             RedBlackRotateLeft(this, parent);
             node = this._;
             break;
           }
         } else {
-          sibling = parent.L;
-          if (sibling.C) {
-            sibling.C = false;
-            parent.C = true;
+          sibling = parent.Left;
+          if (sibling.Color) {
+            sibling.Color = false;
+            parent.Color = true;
             RedBlackRotateRight(this, parent);
-            sibling = parent.L;
+            sibling = parent.Left;
           }
-          if ((sibling.L && sibling.L.C) || (sibling.R && sibling.R.C)) {
-            if (!sibling.L || !sibling.L.C) {
-              sibling.R.C = false;
-              sibling.C = true;
+          if ((sibling.Left && sibling.Left.Color) || (sibling.Right && sibling.Right.Color)) {
+            if (!sibling.Left || !sibling.Left.Color) {
+              sibling.Right.Color = false;
+              sibling.Color = true;
               RedBlackRotateLeft(this, sibling);
-              sibling = parent.L;
+              sibling = parent.Left;
             }
-            sibling.C = parent.C;
-            parent.C = sibling.L.C = false;
+            sibling.Color = parent.Color;
+            parent.Color = sibling.Left.Color = false;
             RedBlackRotateRight(this, parent);
             node = this._;
             break;
           }
         }
-        sibling.C = true;
+        sibling.Color = true;
         node = parent;
-        parent = parent.U;
-      } while (!node.C);
+        parent = parent.Parent;
+      } while (!node.Color);
 
-      if (node) node.C = false;
+      if (node) node.Color = false;
     }
 
   };
 
   function RedBlackRotateLeft(tree, node) {
     var p = node,
-      q = node.R,
-      parent = p.U;
+      q = node.Right,
+      parent = p.Parent;
 
     if (parent) {
-      if (parent.L === p) parent.L = q;
-      else parent.R = q;
+      if (parent.Left === p) parent.Left = q;
+      else parent.Right = q;
     } else {
       tree._ = q;
     }
 
-    q.U = parent;
-    p.U = q;
-    p.R = q.L;
-    if (p.R) p.R.U = p;
-    q.L = p;
+    q.Parent = parent;
+    p.Parent = q;
+    p.Right = q.Left;
+    if (p.Right) p.Right.Parent = p;
+    q.Left = p;
   }
 
   function RedBlackRotateRight(tree, node) {
     var p = node,
-      q = node.L,
-      parent = p.U;
+      q = node.Left,
+      parent = p.Parent;
 
     if (parent) {
-      if (parent.L === p) parent.L = q;
-      else parent.R = q;
+      if (parent.Left === p) parent.Left = q;
+      else parent.Right = q;
     } else {
       tree._ = q;
     }
 
-    q.U = parent;
-    p.U = q;
-    p.L = q.R;
-    if (p.L) p.L.U = p;
-    q.R = p;
+    q.Parent = parent;
+    p.Parent = q;
+    p.Left = q.Right;
+    if (p.Left) p.Left.Parent = p;
+    q.Right = p;
   }
 
   function RedBlackFirst(node) {
-    while (node.L) node = node.L;
+    while (node.Left) node = node.Left;
     return node;
   }
 
@@ -903,11 +921,11 @@ module.exports = function(points) {
   var edges;
 
   function pointX(p) {
-    return p[0];
+    return p.geometry.coordinates[0];
   }
 
   function pointY(p) {
-    return p[1];
+    return p.geometry.coordinates[1];
   }
 
   function functor(x) {
@@ -952,10 +970,10 @@ module.exports = function(points) {
     }
 
     if (extent) {
-        x0 = extent[0][0];
-        y0 = extent[0][1];
-        x1 = extent[1][0];
-        y1 = extent[1][1];
+      x0 = extent[0][0];
+      y0 = extent[0][1];
+      x1 = extent[1][0];
+      y1 = extent[1][1];
       clipEdges(x0, y0, x1, y1);
       closeCells(x0, y0, x1, y1);
     }
@@ -968,19 +986,23 @@ module.exports = function(points) {
     return diagram;
   }
 
-  return function () {
-    var x = pointX,
-      y = pointY,
-      fx = x,
-      fy = y,
-      extent = nullExtent;
+  return function() {
+    var point = {
+      x: p.geometry.coordinates[0],
+      y: p.geometry.coordinates[0]
+    };
+    x = point.x;
+    y = point.y;
+    fx = x;
+    fy = y;
+    extent = nullExtent;
 
     function voronoi(data) {
       var polygons = new Array(data.length),
         x0 = extent[0][0];
-        y0 = extent[0][1];
-        x1 = extent[1][0];
-        y1 = extent[1][1];
+      y0 = extent[0][1];
+      x1 = extent[1][0];
+      y1 = extent[1][1];
 
       computeVoronoi(points(data), extent).cells.forEach(function(cell, i) {
         var edges = cell.edges,
@@ -1070,5 +1092,5 @@ module.exports = function(points) {
     };
 
     return voronoi;
-  }
+  };
 };

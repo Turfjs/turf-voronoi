@@ -8,6 +8,7 @@ var featurecollection = require('turf-featurecollection');
 
 
 /**
+ * Under Development - Not ready for use!
  * Takes a set of {@link Point|points} and
  * creates [Voronoi Polygons](https://en.wikipedia.org/wiki/Voronoi_diagram),
  * returned as a collection of Polygons. These are often used

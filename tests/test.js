@@ -3,7 +3,7 @@ var fs = require('fs');
 var voronoi = require('../index.js');
 
 test('voronoi', function(t){
-  var points = JSON.parse(fs.readFileSync(__dirname+'/fixtures/Points.geojson'));
+  var points = JSON.parse(fs.readFileSync(__dirname+'/fixtures/points.geojson'));
   var voronoied = voronoi(points);
 
   t.equal(voronoied.features[0].geometry.type, 'Polygon');

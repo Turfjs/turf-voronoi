@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Turfjs/turf-voronoi#readme",
   "dependencies": {
+    "geojson-extent": "^0.3.1",
     "turf-featurecollection": "^1.0.1",
     "turf-polygon": "^1.0.3"
   },
